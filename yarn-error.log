@@ -1,0 +1,73 @@
+Arguments: 
+  C:\Program Files\nodejs\node.exe C:\Users\tnahw\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js install
+
+PATH: 
+  C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\nodejs\;C:\Program Files\Docker\Docker\resources\bin;C:\ProgramData\DockerDesktop\version-bin;C:\Program Files\Amazon\AWSCLI\bin\;C:\Program Files\Amazon\AWSSAMCLI\bin\;C:\Program Files\Git\cmd;C:\cygwin64\bin;C:\Users\tnahw\AppData\Local\Microsoft\WindowsApps;;C:\Users\tnahw\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\tnahw\AppData\Roaming\npm
+
+Yarn version: 
+  1.22.10
+
+Node version: 
+  14.17.1
+
+Platform: 
+  win32 x64
+
+Trace: 
+  Error: EPERM: operation not permitted, unlink 'D:\Source\new-rvn-be\node_modules\.yarn-integrity'
+
+npm manifest: 
+  {
+    "name": "node-js-jwt-auth",
+    "version": "1.0.0",
+    "description": "Node.js Demo for JWT Authentication",
+    "main": "server.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "server": "nodemon ./server.js"
+    },
+    "keywords": [
+      "node.js",
+      "jwt",
+      "authentication",
+      "express",
+      "mysql"
+    ],
+    "author": "bezkoder",
+    "license": "ISC",
+    "dependencies": {
+      "aws-sdk": "^2.906.0",
+      "axios": "^0.21.1",
+      "bcryptjs": "^2.4.3",
+      "body-parser": "^1.19.0",
+      "compression": "^1.7.4",
+      "cookie-parser": "^1.4.5",
+      "cors": "^2.8.5",
+      "dotenv": "^9.0.2",
+      "express": "^4.17.1",
+      "express-jwt": "^6.0.0",
+      "express-useragent": "^1.0.15",
+      "google-auth-library": "^7.1.1",
+      "googleapis": "^73.0.0",
+      "joi": "^17.4.0",
+      "jsonwebtoken": "^8.5.1",
+      "mysql2": "^2.1.0",
+      "ngeohash": "^0.6.3",
+      "node-fetch": "^2.6.1",
+      "nodemailer": "^6.5.0",
+      "path": "^0.12.7",
+      "querystring": "^0.2.1",
+      "rootpath": "^0.1.2",
+      "sequelize": "^5.21.3",
+      "xoauth2": "^1.2.0"
+    },
+    "devDependencies": {
+      "nodemon": "^2.0.7"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

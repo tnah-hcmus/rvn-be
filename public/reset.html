@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1,
+  maximum-scale=5"
+    />
+    <link rel="stylesheet" href="/index.css">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata&family=Open+Sans&family=Space+Mono&family=Montserrat&display=swap" rel="stylesheet"> 
+    <title>Reset password</title>
+    <script>
+      function errTranslate(errMsg) {
+        errMsg = errMsg.replaceAll("Validation error: ", '');
+        errMsg = errMsg.replaceAll('\"token\"', 'token');
+        errMsg = errMsg.replaceAll('\"password\"', 'password');
+        errMsg = errMsg.replaceAll('\"confirmPassword\"', 'confirmPassword');
+        return errMsg;
+      }
+      function handleErrors(response) {
+          if (!response.ok) {
+            response.json().then(err => showError(errTranslate(err.message)));
+            throw 'Something went wrong'
+          }
+          return response.json();
+      }
+      function submitForm(e, form){
+        e.preventDefault();
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const password = form.pwd.value;
+        const confirmPassword = form.confirmPwd.value;
+        if(!token || !password || !confirmPassword) {
+          showError('Not enough information to request');
+        } else if(password !== confirmPassword) {
+          showError('Password not match, please check');
+        } else if(password.length < 6) {
+          showError('Password must be more then 6 character');
+        }
+        else {
+          fetch('/api/auth/reset-password', {
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({token, password: form.pwd.value, confirmPassword: form.confirmPwd.value})
+            })
+            .then(handleErrors)
+            .then((data) => {
+              document.location.href = '/done-reset';
+            }).catch((err) => {
+              console.log(err);
+            });
+        } 
+      }
+      function hideError() {
+        const err = document.getElementById('error');
+        if(err) err.style.display = 'none';
+      }
+      function showError(text) {
+        const err = document.getElementById('error');
+        if(err) {
+          err.innerText = text;
+          err.style.display = '';
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div class = 'container'>
+      <div class = 'divide'>
+        <img src = '/title.png' class="title">
+        <img src = '/reset.svg' class="picture">
+      </div>
+      <div class = 'divide'>
+        <div class = 'main-text'>
+          <h3 class = 'text'>Đặt lại mật khẩu của bạn</h3>
+          <form class="form-inline" onsubmit="submitForm(event, this)">
+            <input type="password" id="pwd" placeholder="Nhập mật khẩu mới" name="pwd" onfocus="hideError(event,this)">
+            <p id="error" class="error-text"></p>
+            <input type="password" id="confirmPwd" placeholder="Nhập lại mật khẩu mới" name="confirmPwd" onfocus="hideError(event,this)">
+            <button class='back-button'>Đổi mật khẩu </button>
+          </form>
+        </div>        
+      </div>  
+    </div>
+  </body>
+</html>

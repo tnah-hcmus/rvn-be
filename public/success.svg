@@ -1,0 +1,29 @@
+<svg width="183" height="178" viewBox="0 0 183 178" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0)">
+<path d="M102 142C124.091 142 142 124.091 142 102C142 79.9086 124.091 62 102 62C79.9086 62 62 79.9086 62 102C62 124.091 79.9086 142 102 142Z" fill="#6FCF97"/>
+<path d="M91.7794 120.044L112.347 140.612C129.382 136.069 142 120.549 142 102C142 101.622 142 101.243 142 100.864L125.849 85.9749L91.7794 120.044Z" fill="#27AE60"/>
+<path d="M103.009 110.958C104.776 112.725 104.776 115.753 103.009 117.52L99.35 121.179C97.5835 122.946 94.5551 122.946 92.7885 121.179L76.7633 105.028C74.9967 103.261 74.9967 100.233 76.7633 98.4663L80.4226 94.807C82.1891 93.0405 85.2175 93.0405 86.9841 94.807L103.009 110.958Z" fill="white"/>
+<path d="M117.015 83.0723C118.782 81.3057 121.81 81.3057 123.577 83.0723L127.236 86.7316C129.003 88.4981 129.003 91.5265 127.236 93.2931L99.476 120.927C97.7094 122.694 94.6811 122.694 92.9145 120.927L89.2552 117.268C87.4886 115.501 87.4886 112.473 89.2552 110.706L117.015 83.0723Z" fill="white"/>
+</g>
+<ellipse cx="65" cy="103.125" rx="3" ry="3.45096" fill="#DFDFDF"/>
+<circle cx="158" cy="145" r="24" stroke="#DFDFDF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 8"/>
+<circle cx="6" cy="92" r="6" fill="#6FCF97"/>
+<circle cx="15" cy="46" r="4" fill="#DFDFDF"/>
+<circle cx="167" cy="27" r="4" fill="#6FCF97"/>
+<circle cx="74" cy="24" r="23.5" stroke="#DFDFDF" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5"/>
+<circle cx="102" cy="102" r="73.5" stroke="#DADADA" stroke-width="3"/>
+<circle cx="140" cy="164" r="8" fill="#6FCF97"/>
+<line x1="151.414" y1="148.024" x2="179.024" y2="176.586" stroke="#DFDFDF" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 4"/>
+<line x1="13.414" y1="63.024" x2="41.024" y2="91.586" stroke="#DFDFDF" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 4"/>
+<line x1="43.4142" y1="68" x2="62" y2="86.5858" stroke="#DFDFDF" stroke-width="2" stroke-linecap="round"/>
+<line x1="26.4142" y1="39" x2="54" y2="66.5858" stroke="#DFDFDF" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 5"/>
+<line x1="34.5355" y1="29" x2="46" y2="40.4645" stroke="#DFDFDF" stroke-width="5" stroke-linecap="round"/>
+<line x1="29.535" y1="67.0599" x2="55.0599" y2="93.465" stroke="#27AE60" stroke-width="5" stroke-linecap="round"/>
+<line x1="152.414" y1="134.024" x2="180.024" y2="162.586" stroke="#DFDFDF" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>
+<line x1="164.536" y1="131" x2="172.314" y2="138.778" stroke="#27AE60" stroke-width="5" stroke-linecap="round"/>
+<defs>
+<clipPath id="clip0">
+<rect width="80" height="80" fill="white" transform="translate(62 62)"/>
+</clipPath>
+</defs>
+</svg>
