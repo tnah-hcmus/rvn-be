@@ -1,8 +1,6 @@
 .title {
     position: absolute;
     left: 5%;
-    top: 1em;
-    padding: 1em 0;
     font-family: 'Inconsolata', monospace;
     font-style: normal;
     font-weight: bold;
@@ -12,6 +10,7 @@
     text-transform: uppercase;
     margin: 0 auto;
     color: #333333;
+    width: 200px;
 }
 body {
     margin: 0;

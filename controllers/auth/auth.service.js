@@ -48,7 +48,13 @@ async function loginWithThirdParty({ email, password, name, ipAddress }) {
       await refreshToken.save();
     } else {
       // create account object
-      account = new User({ id: createUUID(), email, password, name, username: email });
+      account = new User({
+        id: createUUID(),
+        email,
+        password,
+        name,
+        username: email,
+      });
       account.role = Role.User;
       account.verified = Date.now();
       account.passwordHash = await hash(password);
@@ -175,12 +181,12 @@ async function revokeToken({ token, ipAddress }) {
   }
 }
 
-async function register(params, origin) {
+async function register(params) {
   try {
     // validate
     if (await User.findOne({ where: { email: params.email } })) {
       // send already registered error in email to prevent account enumeration
-      sendAlreadyRegisteredEmail(params.email, origin);
+      sendAlreadyRegisteredEmail(params.email);
       throw 'Email "' + params.email + '" is already registered';
     }
     if (await User.findOne({ where: { username: params.username } })) {
@@ -205,7 +211,7 @@ async function register(params, origin) {
     // save account
     await account.save();
     // send email
-    await sendVerificationEmail(account, origin);
+    await sendVerificationEmail(account);
 
     return account;
   } catch (err) {
@@ -227,7 +233,7 @@ async function verifyEmail({ token }) {
   }
 }
 
-async function forgotPassword({ email }, origin) {
+async function forgotPassword({ email }) {
   try {
     const account = await User.findOne({ where: { email } });
 
@@ -240,7 +246,7 @@ async function forgotPassword({ email }, origin) {
     await account.save();
 
     // send email
-    await sendPasswordResetEmail(account, origin);
+    await sendPasswordResetEmail(account);
   } catch (err) {
     throw err;
   }
@@ -319,8 +325,9 @@ function randomTokenString() {
   return crypto.randomBytes(40).toString("hex");
 }
 
-async function sendVerificationEmail(account, origin = "http://174.138.28.27") {
+async function sendVerificationEmail(account) {
   try {
+    const origin = "https://api.rvninc.net";
     let message;
     if (origin) {
       const verifyUrl = `${origin}/auth/verify-email?token=${account.verificationToken}`;
@@ -342,10 +349,8 @@ async function sendVerificationEmail(account, origin = "http://174.138.28.27") {
   }
 }
 
-async function sendAlreadyRegisteredEmail(
-  email,
-  origin = "http://174.138.28.27"
-) {
+async function sendAlreadyRegisteredEmail(email) {
+  const origin = "https://api.rvninc.net";
   try {
     let message;
     if (origin) {
@@ -365,10 +370,8 @@ async function sendAlreadyRegisteredEmail(
   }
 }
 
-async function sendPasswordResetEmail(
-  account,
-  origin = "http://174.138.28.27"
-) {
+async function sendPasswordResetEmail(account) {
+  const origin = "https://api.rvninc.net";
   try {
     let message;
     if (origin) {
