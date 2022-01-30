@@ -1,6 +1,9 @@
 require("rootpath")();
 require("dotenv").config();
 const express = require("express");
+const http = require("http");
+const https = require("https");
+const fs = require("fs");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const compression = require("compression");
@@ -56,7 +59,23 @@ app.use((req, res, next) => {
 app.use(errorHandler);
 
 // set port, listen for requests
-const PORT = process.env.PORT;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}.`);
-});
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}.`);
+// });
+let server = http
+  .createServer(app)
+  .listen(process.env.HTTP_PORT, undefined, () => {
+    console.log(`HTTP server is running on port ${process.env.HTTP_PORT}.`);
+  });
+
+// start https server
+let sslOptions = {
+  key: fs.readFileSync(process.env.SSL_KEY),
+  cert: fs.readFileSync(process.env.SSL_CERT),
+};
+
+let serverHttps = https
+  .createServer(sslOptions, app)
+  .listen(process.env.HTTPS_PORT, undefined, () => {
+    console.log(`HTTPS server is running on port ${process.env.HTTPS_PORT}.`);
+  });
