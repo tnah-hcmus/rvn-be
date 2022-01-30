@@ -4,12 +4,13 @@ module.exports = {
   update,
   delete: _delete,
   getByTransId,
+  getByUserId,
+  deleteAllByPostId,
 };
 
 async function create(params) {
   try {
     const trans = new Trans(params);
-    // save payment
     await trans.save();
     return trans;
   } catch (err) {
@@ -17,10 +18,9 @@ async function create(params) {
   }
 }
 
-async function update(id, params) {
+async function update(id, userId, params) {
   try {
-    const trans = await getByTransId(id);
-    // copy params to account and save
+    const trans = await getByTransId(id, userId);
     Object.assign(trans, params);
     await trans.save();
   } catch (err) {
@@ -28,20 +28,44 @@ async function update(id, params) {
   }
 }
 
-async function _delete(id) {
+async function _delete(id, userId) {
   try {
-    const trans = await getByTransId(id);
+    const trans = await getByTransId(id, userId);
     await trans.destroy();
   } catch (err) {
     throw err;
   }
 }
 
-async function getByTransId(id) {
+async function getByTransId(id, userId) {
   try {
-    const trans = await Trans.findByPk(id);
+    const trans = await Trans.findOne({
+      where: { commentId: id, ownerId: userId },
+    });
     if (!trans) throw "Trans not found";
     return trans;
+  } catch (err) {
+    throw err;
+  }
+}
+
+function getByUserId(id) {
+  return Trans.findAll({ where: { ownerId: id } })
+  .then((result) => {
+    const comments = result.map((row) => {
+      const comment = row.get();
+      delete comment.id;
+      delete comment.ownerId;
+      return comment;
+    });
+    return comments;
+  });
+}
+
+async function deleteAllByPostId(id, userId) {
+  try {
+    console.log(Trans);
+    return await Trans.destroy({ where: { postId: id, ownerId: userId } });
   } catch (err) {
     throw err;
   }

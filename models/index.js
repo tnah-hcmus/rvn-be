@@ -14,7 +14,7 @@ const sequelize = new Sequelize(config.DB, config.USER, config.PASSWORD, {
     acquire: config.pool.acquire,
     idle: config.pool.idle,
   },
-  logging: false
+  logging: false,
 });
 
 const db = {};
@@ -36,6 +36,9 @@ db.refreshToken.belongsTo(db.user);
 db.user.hasMany(db.post, { onDelete: "CASCADE", foreignKey: "ownerId" });
 db.post.belongsTo(db.user, { foreignKey: "ownerId" });
 
+db.user.hasMany(db.trans, { onDelete: "CASCADE", foreignKey: "ownerId" });
+db.trans.belongsTo(db.user, { foreignKey: "ownerId" });
+
 db.user.hasOne(db.upload, { onDelete: "CASCADE", foreignKey: "avatar" });
 db.upload.belongsTo(db.user, { foreignKey: "avatar" });
 //--------------------------//
@@ -43,9 +46,6 @@ db.upload.belongsTo(db.user, { foreignKey: "avatar" });
 //Post constraint
 db.post.hasMany(db.upload, { onDelete: "CASCADE", foreignKey: "mediaLink" });
 db.upload.belongsTo(db.post, { foreignKey: "mediaLink" });
-
-// db.post.hasMany(db.trans, { onDelete: "CASCADE", foreignKey: "postId" });
-// db.trans.belongsTo(db.post, { foreignKey: "postId" });
 //--------------------------//
 
 //Upload constraint
@@ -53,7 +53,7 @@ db.upload.hasMany(db.image, { onDelete: "CASCADE" });
 db.image.belongsTo(db.upload);
 
 db.upload.hasMany(db.image, { onDelete: "CASCADE", foreignKey: "thumbnailId" });
-db.image.belongsTo(db.upload,  {foreignKey: "thumbnailId"});
+db.image.belongsTo(db.upload, { foreignKey: "thumbnailId" });
 //--------------------------//
 
 module.exports = db;

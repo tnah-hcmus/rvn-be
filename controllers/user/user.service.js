@@ -143,28 +143,26 @@ async function _delete(id) {
 function fullDetails(account) {
   try {
     const {
-      id,
       username,
       email,
       token,
       isVerified,
       name,
       avatar,
-      favouriteLocations,
       pointBaseLevel, 
-      point
+      point,
+      aliasName
     } = account;
     return {
-      id,
       username,
       email,
       token,
       isVerified,
       name,
       avatar,
-      favouriteLocations,
-      pointBaseLevel, 
-      point
+      pointBaseLevel,
+      point,
+      aliasName,
     };
   } catch (err) {
     throw err;

@@ -1,4 +1,5 @@
 require("rootpath")();
+require("dotenv").config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -7,12 +8,13 @@ const path = require("path");
 const errorHandler = require("middleware/error-handler");
 const getUserAgent = require("middleware/user-agent"); //raw agent
 const useragent = require("express-useragent");
+const config = require("config/auth.config");
 const app = express();
 app.use(express.static(path.join(__dirname, "public")));
 
 //enable cors for test or 3rd party
 const corsOptions = {
-  origin: "http://localhost:8081",
+  origin: config.acceptOrigin,
   optionsSuccessStatus: 200,
   credentials: true,
 };
@@ -43,19 +45,18 @@ app.use("/api/posts", require("routes/post.routes"));
 app.use("/api/trans", require("routes/trans.routes"));
 app.use("/api/uploads", require("routes/upload.routes"));
 app.use("/api/:path", (req, res, next) => {
-  res.status(403).send('You don\'t have permission to view this source');
+  res.status(403).send("You don't have permission to view this source");
 });
 app.use("/", require("routes/public.routes"));
 app.use((req, res, next) => {
-  res.sendFile(path.join(__dirname,'public/404.html'));
+  res.sendFile(path.join(__dirname, "public/404.html"));
 });
-
 
 // global error handler
 app.use(errorHandler);
 
 // set port, listen for requests
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });

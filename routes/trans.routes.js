@@ -5,10 +5,16 @@ const transController = require("controllers/trans/trans.controller");
 
 router
   .route("/single/:id")
-  .get(transController.getById)
+  .get(authorize(), transController.getById)
   .put(authorize(), transController.updateSchema, transController.update)
   .delete(authorize(), transController.delete);
 router
   .route("/")
-  .post(authorize(), transController.createSchema, transController.create);
+  .get(authorize(), transController.getByUserId)
+  .post(authorize(), transController.createSchema, transController.create)
+  .delete(
+    authorize(),
+    transController.deleteAllByPostIdSchema,
+    transController.deleteAllByPostId
+  );
 module.exports = router;

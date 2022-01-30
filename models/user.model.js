@@ -17,20 +17,25 @@ module.exports = (sequelize, Sequelize) => {
       // include hash with this scope
       withHash: { attributes: {} },
     },
-    indexes:[
+    indexes: [
       {
         unique: true,
-        fields:['email']
+        fields: ["email"],
       },
       {
         unique: true,
-        fields:['username']
-      }
-    ]
+        fields: ["username"],
+      },
+    ],
   };
   const User = sequelize.define(
     "users",
     {
+      id: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        primaryKey: true,
+      },
       email: {
         type: Sequelize.STRING,
         // unique: true,
@@ -45,26 +50,19 @@ module.exports = (sequelize, Sequelize) => {
       name: {
         type: Sequelize.STRING,
       },
+      aliasName: {
+        type: Sequelize.STRING,
+      },
       pointBaseLevel: {
         type: Sequelize.INTEGER,
-        defaultValue: 100
+        defaultValue: 100,
       },
       point: {
         type: Sequelize.INTEGER,
-        defaultValue: 0
+        defaultValue: 0,
       },
       avatar: {
         type: Sequelize.STRING,
-      },
-      favouriteLocations: {
-        type: Sequelize.STRING,
-        get() {
-          return this.getDataValue("favouriteLocations")?.split(";") || [];
-        },
-        set(val) {
-          if (Array.isArray(val)) val = new Set(val);
-          this.setDataValue("favouriteLocations", Array.from(val).join(";"));
-        },
       },
       token: {
         type: Sequelize.STRING,

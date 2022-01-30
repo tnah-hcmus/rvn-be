@@ -52,6 +52,7 @@ function createSchema(req, res, next) {
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
     role: Joi.string().valid(Role.Admin, Role.User).required(),
     pointBaseLevel: Joi.number(),
+    aliasName: Joi.string(),
     point: Joi.number(),
     avatar: Joi.string(),
     favouriteLocations: Joi.array(),
@@ -61,6 +62,7 @@ function createSchema(req, res, next) {
 
 function create(req, res, next) {
   req.body.ipAddress = req.ip;
+  req.body.id = createUUID();
   userHelper
     .create(req.body)
     .then((account) => res.json(account))
@@ -75,6 +77,7 @@ function updateSchema(req, res, next) {
     confirmPassword: Joi.string().valid(Joi.ref("password")).empty(/.*/),
     name: Joi.string(),
     pointBaseLevel: Joi.number(),
+    aliasName: Joi.string(),
     point: Joi.number(),
     avatar: Joi.string(),
     favouriteLocations: Joi.array(),
@@ -120,7 +123,9 @@ async function updateAvatar(req, res, next) {
   try {
     req.body.uploadId = createUUID();
     const upload = await uploadHelper.create(req.body, req.user.id);
-    let account = await userHelper.update(req.user.id, { avatar: req.body.uploadId });
+    let account = await userHelper.update(req.user.id, {
+      avatar: req.body.uploadId,
+    });
     const urls = await Promise.all([
       getSignedUrlForGetImage(upload.imageId),
       getSignedUrlForGetImage(upload.thumbnailId),
@@ -140,8 +145,11 @@ function editFavouriteLocationSchema(req, res, next) {
 }
 
 function editFavouriteLocation(req, res, next) {
-  if(req.body.operation !== 'RESET' && (!req.body.locationId || typeof req.body.locationId !== 'number')) {
-    return res.status(400).send('Missing param locationId');
+  if (
+    req.body.operation !== "RESET" &&
+    (!req.body.locationId || typeof req.body.locationId !== "number")
+  ) {
+    return res.status(400).send("Missing param locationId");
   }
   userHelper
     .updateFavouriteLocation({ ...req.body, userId: req.user.id })

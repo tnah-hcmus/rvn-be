@@ -2,8 +2,13 @@ module.exports = (sequelize, Sequelize) => {
   const Post = sequelize.define(
     "posts",
     {
+      id: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        primaryKey: true,
+      },
       ownerId: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING,
         allowNull: false,
       },
       rawPostId: {
@@ -25,6 +30,14 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.BOOLEAN,
         default: false,
       },
+      url: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      lastUpdated: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      }
     },
     {
       timestamps: false,
@@ -36,6 +49,10 @@ module.exports = (sequelize, Sequelize) => {
         {
           name: "indexed_by_cons",
           fields: ["ownerId", "rawPostId"],
+        },
+        {
+          name: "indexed_by_raw",
+          fields: ["rawPostId"],
         },
       ],
     }

@@ -2,37 +2,43 @@ const transHelper = require("./trans.service");
 const Joi = require("joi");
 const validateRequest = require("middleware/validate-request");
 const Role = require("helper/role");
-const postHelper = require("../post/post.service");
 
 module.exports = {
   getById,
+  getByUserId,
   createSchema,
   create,
   updateSchema,
   update,
   delete: _delete,
+  deleteAllByPostIdSchema,
+  deleteAllByPostId,
 };
+
+function getByUserId(req, res, next) {
+  if (!req.user.id && req.user.role !== Role.Admin) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  transHelper
+    .getByUserId(req.user.id)
+    .then((trans) => res.json(trans))
+    .catch(next);
+}
+
 function getById(req, res, next) {
   transHelper
-    .getByTransId(req.params.id)
-    .then(async (trans) => {
-      try {
-        if (trans) {
-          const post = await postHelper.getByPostId(trans.postId);
-          if (post.ownerId !== req.user.id && req.user.role !== Role.Admin)
-            return res.status(401).json({ message: "Unauthorized" });
-          else res.json(trans);
-        } else res.sendStatus(404);
-      } catch (e) {
-        res.status(401).json({ message: "Error occur" });
-      }
+    .getByTransId(req.params.id, req.user.id)
+    .then((trans) => {
+      delete trans.id;
+      delete trans.ownerId;
+      res.json(trans);
     })
     .catch(next);
 }
 function createSchema(req, res, next) {
   const schema = Joi.object({
     commentId: Joi.string().required(),
-    postId: Joi.integer().required(),
+    postId: Joi.string().required(),
     content: Joi.string(),
     rootCommentId: Joi.string().required(),
   });
@@ -41,13 +47,14 @@ function createSchema(req, res, next) {
 
 async function create(req, res, next) {
   try {
-    const post = await postHelper.getByPostId(req.body.postId);
-    if (post.ownerId !== req.user.id && req.user.role !== Role.Admin) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+    req.body.ownerId = req.user.id;
     transHelper
       .create(req.body)
-      .then((trans) => res.json(trans))
+      .then((trans) => {
+        delete trans.id;
+        delete trans.ownerId;
+        res.json(trans);
+      })
       .catch(next);
   } catch (err) {
     res.status(401).json({ message: "Error occur" });
@@ -57,7 +64,7 @@ async function create(req, res, next) {
 function updateSchema(req, res, next) {
   const schemaRules = {
     commentId: Joi.string().empty(/.*/),
-    postId: Joi.integer().empty(/.*/),
+    postId: Joi.string().empty(/.*/),
     content: Joi.string(),
     rootCommentId: Joi.string().empty(/.*/),
   };
@@ -73,13 +80,12 @@ function updateSchema(req, res, next) {
 
 async function update(req, res, next) {
   try {
-    const post = await postHelper.getByPostId(req.params.id);
-    if (post.ownerId !== req.user.id && req.user.role !== Role.Admin) {
+    if (!req.user.id && req.user.role !== Role.Admin) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    transHelper
-      .update(req.params.id, req.body)
-      .then((trans) => res.json(trans))
+    return transHelper
+      .update(req.params.id, req.user.id, req.body)
+      .then(() => res.json({ message: "Update success" }))
       .catch(next);
   } catch (err) {
     res.status(401).json({ message: "Error occur" });
@@ -88,18 +94,41 @@ async function update(req, res, next) {
 
 async function _delete(req, res, next) {
   try {
-    const post = await postHelper.getByPostId(req.params.id);
-    if (post.ownerId !== req.user.id && req.user.role !== Role.Admin) {
+    if (!req.user.id && req.user.role !== Role.Admin) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    transHelper
-      .delete(req.params.id)
+    return transHelper
+      .delete(req.params.id, req.user.id)
       .then(() => res.json({ message: "Trans deleted successfully" }))
       .catch(next);
   } catch (err) {
     res.status(401).json({ message: "Error occur" });
   }
-  if (req.user.role !== Role.Admin) {
-    return res.status(401).json({ message: "Unauthorized" });
+}
+
+function deleteAllByPostIdSchema(req, res, next) {
+  const schemaRules = {
+    postId: Joi.string(),
+  };
+  // only admins can update specified field
+  if (req.user.role === Role.Admin) {
+    //schemaRules.role = Joi.string().valid(Role.Admin, Role.User).empty('');
+  }
+
+  const schema = Joi.object(schemaRules);
+  validateRequest(req, next, schema);
+}
+
+async function deleteAllByPostId(req, res, next) {
+  try {
+    if (!req.user.id && req.user.role !== Role.Admin) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    transHelper
+      .deleteAllByPostId(req.body.postId, req.user.id)
+      .then(() => res.json({ message: "Trans in post deleted successfully" }))
+      .catch(next);
+  } catch (err) {
+    res.status(401).json({ message: "Error occur" });
   }
 }

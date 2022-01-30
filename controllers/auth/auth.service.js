@@ -5,11 +5,13 @@ const crypto = require("crypto");
 const sendEmail = require("helper/send-email");
 const { user: User, refreshToken: RefreshToken } = require("models/index");
 const Role = require("helper/role");
+const createUUID = require("helper/generate-uuid");
+const { fullDetails, getAccount } = require("controllers/user/user.service.js");
 const {
-  fullDetails,
-  getAccount,
-} = require("controllers/user/user.service.js");
-const { getGoogleAccountFromCode, urlGoogle, loginWithIdToken } = require("helper/google-utils");
+  getGoogleAccountFromCode,
+  urlGoogle,
+  loginWithIdToken,
+} = require("helper/google-utils");
 const {
   getFacebookUserData,
   getFacebookUrl,
@@ -33,7 +35,7 @@ module.exports = {
 function getThirdPartyUrlInfo(thirdParty) {
   if (thirdParty === "facebook") return getFacebookUrl();
   else if (thirdParty === "google") return urlGoogle();
-};
+}
 
 async function loginWithThirdParty({ email, password, name, ipAddress }) {
   try {
@@ -46,7 +48,7 @@ async function loginWithThirdParty({ email, password, name, ipAddress }) {
       await refreshToken.save();
     } else {
       // create account object
-      account = new User({ email, password, name, username: email });
+      account = new User({ id: createUUID(), email, password, name, username: email });
       account.role = Role.User;
       account.verified = Date.now();
       account.passwordHash = await hash(password);
@@ -68,7 +70,7 @@ async function loginWithThirdParty({ email, password, name, ipAddress }) {
 async function loginWithGoogle({ idToken, ipAddress }) {
   try {
     // const { email, password, name } = await getGoogleAccountFromCode(code);
-    const {email, password, name } = await loginWithIdToken(idToken);
+    const { email, password, name } = await loginWithIdToken(idToken);
     return await loginWithThirdParty({ email, password, name, ipAddress });
   } catch (err) {
     throw err;
@@ -93,13 +95,10 @@ async function authenticate({ emailOrUsername, password, ipAddress }) {
       account = await User.scope("withHash").findOne({
         where: { username: emailOrUsername },
       });
-    if (
-      !account ||
-      !(await bcrypt.compare(password, account.passwordHash))
-    ) {
+    if (!account || !(await bcrypt.compare(password, account.passwordHash))) {
       throw "Email/username or password is incorrect";
-    } else if( !account.isVerified) {
-      throw "Account is not verified yet"
+    } else if (!account.isVerified) {
+      throw "Account is not verified yet";
     }
     // authentication successful so generate jwt and refresh tokens
     const jwtToken = generateJwtToken(account);
@@ -163,15 +162,14 @@ async function changePassword({ oldPassword, newPassword, id }) {
 async function revokeToken({ token, ipAddress }) {
   try {
     const refreshToken = await getRefreshToken(token);
-    const account = await User.scope("withHash").findOne({refreshToken: token});
+    const account = await User.scope("withHash").findOne({
+      refreshToken: token,
+    });
     // revoke token and save
     refreshToken.revoked = Date.now();
     refreshToken.revokedByIp = ipAddress;
     account.token = null;
-    await Promise.all([
-      refreshToken.save(),
-      account.save()
-    ]);
+    await Promise.all([refreshToken.save(), account.save()]);
   } catch (err) {
     throw err;
   }
@@ -188,6 +186,7 @@ async function register(params, origin) {
     if (await User.findOne({ where: { username: params.username } })) {
       throw 'Username "' + params.username + '" is already registered';
     }
+    params.id = createUUID();
     // create account object
     const account = new User(params);
 
@@ -320,14 +319,14 @@ function randomTokenString() {
   return crypto.randomBytes(40).toString("hex");
 }
 
-async function sendVerificationEmail(account, origin = 'http://174.138.28.27') {
+async function sendVerificationEmail(account, origin = "http://174.138.28.27") {
   try {
     let message;
     if (origin) {
       const verifyUrl = `${origin}/auth/verify-email?token=${account.verificationToken}`;
       message = `<p>Please click the below link to verify your email address:</p>
                    <p><a href="${verifyUrl}">${verifyUrl}</a></p>`;
-    } 
+    }
     message += `<p>If you are developer. Please use the below token to verify your email address with the <code>/account/verify-email</code> api route:</p>
                    <p><code>${account.verificationToken}</code></p>`;
 
@@ -343,12 +342,15 @@ async function sendVerificationEmail(account, origin = 'http://174.138.28.27') {
   }
 }
 
-async function sendAlreadyRegisteredEmail(email, origin = 'http://174.138.28.27') {
+async function sendAlreadyRegisteredEmail(
+  email,
+  origin = "http://174.138.28.27"
+) {
   try {
     let message;
     if (origin) {
       message = `<p>If you don't know your password please visit the <a href="${origin}/api/auth/forgot-password">forgot password</a> page.</p>`;
-    } 
+    }
     message += `<p>If you are developer. If you don't know your password you can reset it via the <code>/api/auth/forgot-password</code> api route.</p>`;
 
     await sendEmail({
@@ -363,7 +365,10 @@ async function sendAlreadyRegisteredEmail(email, origin = 'http://174.138.28.27'
   }
 }
 
-async function sendPasswordResetEmail(account, origin = 'http://174.138.28.27') {
+async function sendPasswordResetEmail(
+  account,
+  origin = "http://174.138.28.27"
+) {
   try {
     let message;
     if (origin) {

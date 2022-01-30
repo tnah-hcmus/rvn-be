@@ -41,7 +41,7 @@ function authenticate(req, res, next) {
   authHelper
     .authenticate({ emailOrUsername, password, ipAddress })
     .then((account) => {
-      setTokenCookie(res, account.refreshToken);
+      setTokenCookie(res, "refreshToken", account.refreshToken);
       res.json(account);
     })
     .catch(next);
@@ -59,7 +59,6 @@ function loginWithThirdParty(req, res, next) {
   const { code, idToken } = req.body;
   const ipAddress = req.ip;
   let promisedAccount = null;
-  console.log("Here")
   if (req.url.includes("google"))
     promisedAccount = authHelper.loginWithGoogle({ idToken, ipAddress });
   else if (req.url.includes("facebook"))
@@ -229,11 +228,11 @@ function resetPassword(req, res, next) {
 
 // helper functions
 
-function setTokenCookie(res, token) {
+function setTokenCookie(res, name, token) {
   // create cookie with refresh token that expires in 33 days
   const cookieOptions = {
     httpOnly: true,
     expires: new Date(Date.now() + 33 * 24 * 60 * 60 * 1000),
   };
-  res.cookie("refreshToken", token, cookieOptions);
+  res.cookie(name, token, cookieOptions);
 }

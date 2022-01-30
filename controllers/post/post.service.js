@@ -5,22 +5,27 @@ module.exports = {
   update,
   delete: _delete,
   getByPostId,
+  getById,
 };
 
-async function getByUserId(id) {
-  try {
-    return await Post.findAll({ where: { ownerId: id } });
-  } catch (err) {
-    throw err;
-  }
+function getByUserId(id) {
+  return Post.findAll({ where: { ownerId: id } }).then((result) => {
+    const posts = result.map((row) => {
+      const post = row.get();
+      delete post.id;
+      delete post.ownerId;
+      return post;
+    });
+    return posts;
+  });
 }
 
 async function create(params) {
   try {
     let post = await getByIdentity(params.ownerId, params.rawPostId);
-    if(post) throw 'Already have post on this location';
+    if (post) throw "Already have post on this location";
     else post = new Post(params);
-    
+
     await post.save();
     return post;
   } catch (err) {
@@ -28,10 +33,10 @@ async function create(params) {
   }
 }
 
-async function update(userId, id, params, isAdmin) {
+async function update(userId, id, params) {
   try {
-    const post = await getByPostId(id);
-    if (post.ownerId === userId || isAdmin) {
+    const post = await getByIdentity(userId, id);
+    if (post) {
       // copy params to account and save
       Object.assign(post, params);
       await post.save();
@@ -41,9 +46,9 @@ async function update(userId, id, params, isAdmin) {
   }
 }
 
-async function _delete(id) {
+async function _delete(id, userId) {
   try {
-    const post = await getByPostId(id);
+    const post = await getByIdentity(userId, id);
     await post.destroy();
   } catch (err) {
     throw err;
@@ -59,9 +64,18 @@ async function getByIdentity(ownerId, rawPostId) {
   }
 }
 
-async function getByPostId(id) {
+async function getById(id) {
   try {
     const post = await Post.findByPk(id);
+    if (!post) throw "Post not found";
+    return post;
+  } catch (err) {
+    throw err;
+  }
+}
+async function getByPostId(id) {
+  try {
+    const post = await Post.findOne({ rawPostId: id });
     if (!post) throw "Post not found";
     return post;
   } catch (err) {
