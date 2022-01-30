@@ -62,11 +62,11 @@ app.use(errorHandler);
 // app.listen(PORT, () => {
 //   console.log(`Server is running on port ${PORT}.`);
 // });
-let server = http
-  .createServer(app)
-  .listen(process.env.HTTP_PORT, undefined, () => {
-    console.log(`HTTP server is running on port ${process.env.HTTP_PORT}.`);
-  });
+// let server = http
+//   .createServer(app)
+//   .listen(process.env.HTTP_PORT, undefined, () => {
+//     console.log(`HTTP server is running on port ${process.env.HTTP_PORT}.`);
+//   });
 
 // start https server
 let sslOptions = {
