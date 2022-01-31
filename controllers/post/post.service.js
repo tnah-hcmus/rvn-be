@@ -23,7 +23,7 @@ function getByUserId(id) {
 async function create(params) {
   try {
     let post = await getByIdentity(params.ownerId, params.rawPostId);
-    if (post) throw "Already have post on this location";
+    if (post) throw "Bạn đang dịch bài này rồi mà";
     else post = new Post(params);
 
     await post.save();

@@ -4,6 +4,11 @@ const validateRequest = require("middleware/validate-request");
 const Role = require("helper/role");
 const { captchaKey } = require("config/auth.config");
 const fetch = require("node-fetch");
+const fs = require("fs");
+const path = require("path");
+const whitelistPath = path.join(__dirname, "../../whitelist.json");
+const whitelist = JSON.parse(fs.readFileSync(whitelistPath));
+
 module.exports = {
   authenticate,
   authenticateSchema,
@@ -129,15 +134,18 @@ function registerSchema(req, res, next) {
 }
 
 function register(req, res, next) {
-  authHelper
-    .register(req.body, req.get("origin"))
-    .then(() =>
-      res.json({
-        message:
-          "Registration successful, please check your email for verification instructions",
-      })
-    )
-    .catch(next);
+  if (!whitelist.includes(req.body.email)) {
+    res.status(400).json({ message: "You are not whitelisted in this server" });
+  } else 
+    authHelper
+      .register(req.body, req.get("origin"))
+      .then(() =>
+        res.json({
+          message:
+            "Registration successful, please check your email for verification instructions",
+        })
+      )
+      .catch(next);
 }
 
 function changePasswordSchema(req, res, next) {

@@ -64,7 +64,6 @@ function getByUserId(id) {
 
 async function deleteAllByPostId(id, userId) {
   try {
-    console.log(Trans);
     return await Trans.destroy({ where: { postId: id, ownerId: userId } });
   } catch (err) {
     throw err;
