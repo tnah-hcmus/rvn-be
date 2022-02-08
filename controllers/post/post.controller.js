@@ -3,6 +3,7 @@ const Joi = require("joi");
 const validateRequest = require("middleware/validate-request");
 const Role = require("helper/role");
 const createUUID = require("helper/generate-uuid");
+const { parseUrlLink, checkUrlExists } = require("helper/url-helper");
 
 module.exports = {
   getByUserId,
@@ -18,7 +19,10 @@ function getByUserId(req, res, next) {
   if (!req.user.id && req.user.role !== Role.Admin) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  postHelper.getByUserId(req.user.id).then((posts) => res.json(posts)).catch(next);
+  postHelper
+    .getByUserId(req.user.id)
+    .then((posts) => res.json(posts))
+    .catch(next);
 }
 
 function getById(req, res, next) {
@@ -47,17 +51,31 @@ function createSchema(req, res, next) {
   validateRequest(req, next, schema);
 }
 
-function create(req, res, next) {
-  req.body.ownerId = req.user.id;
-  req.body.id = createUUID();
-  postHelper
-    .create(req.body)
-    .then((post) => {
-      delete post.id;
-      delete post.ownerId;
-      res.json(post);
-    })
-    .catch(next);
+async function create(req, res, next) {
+  const id = parseUrlLink(req.body.url);
+  if (id !== req.body.rawPostId) {
+    return res
+      .status(401)
+      .json({ message: "Bài reddit này không tồn tại, bạn tìm bài khác nhé" });
+  } else {
+    const isExist = await checkUrlExists(req.body.url + ".json");
+    if (!isExist)
+      return res.status(403).json({
+        message: "Bài reddit này không tồn tại, bạn tìm bài khác nhé",
+      });
+    else {
+      req.body.ownerId = req.user.id;
+      req.body.id = createUUID();
+      postHelper
+        .create(req.body)
+        .then((post) => {
+          delete post.id;
+          delete post.ownerId;
+          res.json(post);
+        })
+        .catch(next);
+    }
+  }
 }
 
 function updateSchema(req, res, next) {

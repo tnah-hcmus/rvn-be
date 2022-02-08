@@ -6,6 +6,7 @@ module.exports = {
   delete: _delete,
   getByPostId,
   getById,
+  getByIdentity,
 };
 
 function getByUserId(id) {
@@ -75,8 +76,7 @@ async function getById(id) {
 }
 async function getByPostId(id) {
   try {
-    const post = await Post.findOne({ rawPostId: id });
-    if (!post) throw "Post not found";
+    const post = await Post.findOne({ where: {rawPostId: id }});
     return post;
   } catch (err) {
     throw err;

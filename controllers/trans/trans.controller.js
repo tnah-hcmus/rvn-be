@@ -1,4 +1,5 @@
 const transHelper = require("./trans.service");
+const postHelper = require("../post/post.service");
 const Joi = require("joi");
 const validateRequest = require("middleware/validate-request");
 const Role = require("helper/role");
@@ -47,6 +48,8 @@ function createSchema(req, res, next) {
 
 async function create(req, res, next) {
   try {
+    const post = await postHelper.getByIdentity(req.user.id, req.body.postId);
+    if (!post) throw new Error("Post not found");
     req.body.ownerId = req.user.id;
     transHelper
       .create(req.body)
@@ -57,7 +60,7 @@ async function create(req, res, next) {
       })
       .catch(next);
   } catch (err) {
-    res.status(401).json({ message: "Error occur" });
+    res.status(403).json({ message: "Có lỗi xảy ra, vui lòng thử lại hoặc báo lỗi" });
   }
 }
 
@@ -88,7 +91,7 @@ async function update(req, res, next) {
       .then(() => res.json({ message: "Update success" }))
       .catch(next);
   } catch (err) {
-    res.status(401).json({ message: "Error occur" });
+    return res.status(403).json({ message: "Có lỗi xảy ra" });
   }
 }
 
@@ -102,7 +105,7 @@ async function _delete(req, res, next) {
       .then(() => res.json({ message: "Trans deleted successfully" }))
       .catch(next);
   } catch (err) {
-    res.status(401).json({ message: "Error occur" });
+    return res.status(403).json({ message: "Có lỗi xảy ra" });
   }
 }
 
@@ -129,6 +132,6 @@ async function deleteAllByPostId(req, res, next) {
       .then(() => res.json({ message: "Trans in post deleted successfully" }))
       .catch(next);
   } catch (err) {
-    res.status(401).json({ message: "Error occur" });
+    return res.status(403).json({ message: "Có lỗi xảy ra" });
   }
 }
