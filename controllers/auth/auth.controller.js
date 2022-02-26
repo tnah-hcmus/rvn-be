@@ -4,10 +4,9 @@ const validateRequest = require("middleware/validate-request");
 const Role = require("helper/role");
 const { captchaKey } = require("config/auth.config");
 const fetch = require("node-fetch");
-const fs = require("fs");
-const path = require("path");
-const whitelistPath = path.join(__dirname, "../../whitelist.json");
-const whitelist = JSON.parse(fs.readFileSync(whitelistPath));
+const {REFRESH_TOKEN_EXPIRED, TOKEN_EXPIRED, TOKEN_NAME, REFRESH_TOKEN_NAME} = require("./const");
+
+
 
 module.exports = {
   authenticate,
@@ -46,7 +45,10 @@ function authenticate(req, res, next) {
   authHelper
     .authenticate({ emailOrUsername, password, ipAddress })
     .then((account) => {
-      setTokenCookie(res, "refreshToken", account.refreshToken);
+      setTokenCookie(res, REFRESH_TOKEN_NAME , account.refreshToken, REFRESH_TOKEN_EXPIRED);
+      setTokenCookie(res, TOKEN_NAME, account.jwtToken, TOKEN_EXPIRED);
+      delete account.refreshToken;
+      delete account.jwtToken;
       res.json(account);
     })
     .catch(next);
@@ -71,7 +73,10 @@ function loginWithThirdParty(req, res, next) {
   if (promisedAccount) {
     promisedAccount
       .then((account) => {
-        setTokenCookie(res, account.refreshToken);
+        setTokenCookie(res, REFRESH_TOKEN_NAME , account.refreshToken, REFRESH_TOKEN_EXPIRED);
+        setTokenCookie(res, TOKEN_NAME, account.jwtToken, TOKEN_EXPIRED);
+        delete account.refreshToken;
+        delete account.jwtToken;
         res.json(account);
       })
       .catch(next);
@@ -88,12 +93,15 @@ function getOAuthInfo(req, res, next) {
 }
 
 function refreshToken(req, res, next) {
-  const token = req.body.refreshToken;
+  const token = req.body.token || req.cookies[REFRESH_TOKEN_NAME];
   const ipAddress = req.ip;
   authHelper
     .refreshToken({ token, ipAddress })
     .then((account) => {
-      setTokenCookie(res, account.refreshToken);
+      setTokenCookie(res, REFRESH_TOKEN_NAME , account.refreshToken, REFRESH_TOKEN_EXPIRED);
+      setTokenCookie(res, TOKEN_NAME, account.jwtToken, TOKEN_EXPIRED);
+      delete account.refreshToken;
+      delete account.jwtToken;
       res.json(account);
     })
     .catch(next);
@@ -108,7 +116,7 @@ function revokeTokenSchema(req, res, next) {
 
 function revokeToken(req, res, next) {
   // accept token from request body or cookie
-  const token = req.body.token || req.cookies.refreshToken;
+  const token = req.body.token || req.cookies[REFRESH_TOKEN_NAME];
   const ipAddress = req.ip;
 
   if (!token) return res.status(400).json({ message: "Token is required" });
@@ -134,9 +142,6 @@ function registerSchema(req, res, next) {
 }
 
 function register(req, res, next) {
-  if (!whitelist.includes(req.body.email)) {
-    res.status(400).json({ message: "You are not whitelisted in this server" });
-  } else 
     authHelper
       .register(req.body, req.get("origin"))
       .then(() =>
@@ -200,7 +205,7 @@ function verifyEmail(req, res, next) {
 
 function forgotPasswordSchema(req, res, next) {
   const schema = Joi.object({
-    email: Joi.string().email().required(),
+    credentital: Joi.string().required(),
   });
   validateRequest(req, next, schema);
 }
@@ -236,11 +241,12 @@ function resetPassword(req, res, next) {
 
 // helper functions
 
-function setTokenCookie(res, name, token) {
-  // create cookie with refresh token that expires in 33 days
+function setTokenCookie(res, name, token, time) {
+  // create cookie with refresh token that expires in time
   const cookieOptions = {
     httpOnly: true,
-    expires: new Date(Date.now() + 33 * 24 * 60 * 60 * 1000),
+    expires: new Date(Date.now() + time),
+    sameSite: "Strict",
   };
   res.cookie(name, token, cookieOptions);
 }

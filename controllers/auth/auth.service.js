@@ -32,6 +32,8 @@ module.exports = {
   changePassword,
 };
 
+const origin = "https://api.rvninc.net";
+
 function getThirdPartyUrlInfo(thirdParty) {
   if (thirdParty === "facebook") return getFacebookUrl();
   else if (thirdParty === "google") return urlGoogle();
@@ -43,6 +45,8 @@ async function loginWithThirdParty({ email, password, name, ipAddress }) {
     let refreshToken = null;
     let jwtToken = null;
     if (account) {
+      account.token = randomTokenString();
+      await account.save();
       jwtToken = generateJwtToken(account);
       refreshToken = generateRefreshToken(account, ipAddress);
       await refreshToken.save();
@@ -57,6 +61,7 @@ async function loginWithThirdParty({ email, password, name, ipAddress }) {
       });
       account.role = Role.User;
       account.verified = Date.now();
+      account.token = randomTokenString();
       account.passwordHash = await hash(password);
       await account.save();
       jwtToken = generateJwtToken(account);
@@ -107,6 +112,8 @@ async function authenticate({ emailOrUsername, password, ipAddress }) {
       throw "Account is not verified yet";
     }
     // authentication successful so generate jwt and refresh tokens
+    account.token = randomTokenString();
+    await account.save();
     const jwtToken = generateJwtToken(account);
     const refreshToken = generateRefreshToken(account, ipAddress);
 
@@ -134,6 +141,8 @@ async function refreshToken({ token, ipAddress }) {
     refreshToken.revoked = Date.now();
     refreshToken.revokedByIp = ipAddress;
     refreshToken.replacedByToken = newRefreshToken.token;
+    account.token = randomTokenString();
+    await account.save();
     await refreshToken.save();
     await newRefreshToken.save();
 
@@ -168,9 +177,7 @@ async function changePassword({ oldPassword, newPassword, id }) {
 async function revokeToken({ token, ipAddress }) {
   try {
     const refreshToken = await getRefreshToken(token);
-    const account = await User.scope("withHash").findOne({
-      refreshToken: token,
-    });
+    const account = await getAccount(refreshToken.userId);
     // revoke token and save
     refreshToken.revoked = Date.now();
     refreshToken.revokedByIp = ipAddress;
@@ -184,13 +191,11 @@ async function revokeToken({ token, ipAddress }) {
 async function register(params) {
   try {
     // validate
-    if (await User.findOne({ where: { email: params.email } })) {
+    const preAccount = await User.findOne({ where: { email: params.email } }) || await User.findOne({ where: { username: params.username } });
+    if (preAccount) {
       // send already registered error in email to prevent account enumeration
-      sendAlreadyRegisteredEmail(params.email);
-      throw 'Email "' + params.email + '" is already registered';
-    }
-    if (await User.findOne({ where: { username: params.username } })) {
-      throw 'Username "' + params.username + '" is already registered';
+      sendAlreadyRegisteredEmail(preAccount);
+      throw 'Email/username is already registered';
     }
     params.id = createUUID();
     // create account object
@@ -233,9 +238,9 @@ async function verifyEmail({ token }) {
   }
 }
 
-async function forgotPassword({ email }) {
+async function forgotPassword({ credentital }) {
   try {
-    const account = await User.findOne({ where: { email } });
+    const account = await User.findOne({ where: { email: credentital } }) || await User.findOne({ where: { username: credentital } });
 
     // always return ok response to prevent email enumeration
     if (!account) return;
@@ -306,7 +311,7 @@ async function hash(password) {
 
 function generateJwtToken(account) {
   // create a jwt token containing the account id that expires in 7 days
-  return jwt.sign({ sub: Date.now(), id: account.id }, config.secret, {
+  return jwt.sign({ sub: Date.now(), token: account.token }, config.secret, {
     expiresIn: "7d",
   });
 }
@@ -327,14 +332,12 @@ function randomTokenString() {
 
 async function sendVerificationEmail(account) {
   try {
-    const origin = "https://api.rvninc.net";
     let message;
     if (origin) {
       const verifyUrl = `${origin}/auth/verify-email?token=${account.verificationToken}`;
       message = `<p>Please click the below link to verify your email address:</p>
                    <p><a href="${verifyUrl}">${verifyUrl}</a></p>`;
-    }
-    message += `<p>If you are developer. Please use the below token to verify your email address with the <code>/account/verify-email</code> api route:</p>
+    } else message = `<p>If you are developer. Please use the below token to verify your email address with the <code>/account/verify-email</code> api route:</p>
                    <p><code>${account.verificationToken}</code></p>`;
 
     await sendEmail({
@@ -349,20 +352,24 @@ async function sendVerificationEmail(account) {
   }
 }
 
-async function sendAlreadyRegisteredEmail(email) {
+async function sendAlreadyRegisteredEmail(account) {
   const origin = "https://api.rvninc.net";
   try {
     let message;
     if (origin) {
       message = `<p>If you don't know your password please visit the <a href="${origin}/api/auth/forgot-password">forgot password</a> page.</p>`;
-    }
-    message += `<p>If you are developer. If you don't know your password you can reset it via the <code>/api/auth/forgot-password</code> api route.</p>`;
+      if(account.isVerified) {
+        const verifyUrl = `${origin}/auth/verify-email?token=${account.verificationToken}`;
+        message += `<p>If you didn't receive verify email, please click the below link to verify your email address: <p><a href="${verifyUrl}">${verifyUrl}</a></p>`;
+      }
+    } else
+      message = `<p>If you are developer. If you don't know your password you can reset it via the <code>/api/auth/forgot-password</code> api route.</p>`;
 
     await sendEmail({
       to: email,
       subject: "Sign-up Verification API - Email Already Registered",
       html: `<h4>Email Already Registered</h4>
-               <p>Your email <strong>${email}</strong> is already registered.</p>
+               <p>Your email <strong>${account.email}</strong> is already registered.</p>
                ${message}`,
     });
   } catch (err) {
@@ -371,15 +378,13 @@ async function sendAlreadyRegisteredEmail(email) {
 }
 
 async function sendPasswordResetEmail(account) {
-  const origin = "https://api.rvninc.net";
   try {
     let message;
     if (origin) {
       const resetUrl = `${origin}/auth/reset-password?token=${account.resetToken}`;
       message = `<p>Please click the below link to reset your password, the link will be valid for 1 day:</p>
                    <p><a href="${resetUrl}">${resetUrl}</a></p>`;
-    }
-    message = `<p>If you are developer. Please use the below token to reset your password with the <code>/api/auth/reset-password</code> api route:</p>
+    } else message = `<p>If you are developer. Please use the below token to reset your password with the <code>/api/auth/reset-password</code> api route:</p>
                    <p><code>${account.resetToken}</code></p>`;
 
     await sendEmail({

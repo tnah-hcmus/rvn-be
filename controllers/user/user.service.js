@@ -145,7 +145,6 @@ function fullDetails(account) {
     const {
       username,
       email,
-      token,
       isVerified,
       name,
       avatar,
@@ -156,7 +155,6 @@ function fullDetails(account) {
     return {
       username,
       email,
-      token,
       isVerified,
       name,
       avatar,
@@ -171,8 +169,8 @@ function fullDetails(account) {
 
 function basicDetails(account) {
   try {
-    const { id, username, name, avatar, pointBaseLevel, point } = account;
-    return { id, username, name, avatar, pointBaseLevel, point };
+    const { id, name, avatar, pointBaseLevel, point } = account;
+    return { id, name, avatar, pointBaseLevel, point };
   } catch (err) {
     throw err;
   }

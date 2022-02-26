@@ -1,6 +1,7 @@
 const jwt = require("express-jwt");
 const { secret } = require("config/auth.config");
 const db = require("models/index");
+const { TOKEN_NAME } = require("controllers/auth/const");
 
 module.exports = authorize;
 
@@ -13,13 +14,29 @@ function authorize(roles = []) {
 
   return [
     // authenticate JWT token and attach user to request object (req.user)
-    jwt({ secret, algorithms: ["HS256"] }),
+    jwt({
+      secret,
+      algorithms: ["HS256"],
+      getToken: function getToken(req) {
+        if(req.cookies && req.cookies[TOKEN_NAME]) {
+          return req.cookies[TOKEN_NAME];
+        }
+        if (
+          req.headers.authorization &&
+          req.headers.authorization.split(" ")[0] === "Bearer"
+        ) {
+          return req.headers.authorization.split(" ")[1];
+        } else if (req.query && req.query.token) {
+          return req.query.token;
+        }
+        return null;
+      },
+    }),
 
     // authorize based on user role
     async (req, res, next) => {
       try {
-        const account = await db.user.findByPk(req.user.id);
-
+        const account = await db.user.findOne({ where: { token: req.user.token } });
         if (!account || (roles.length && !roles.includes(account.role))) {
           // account no longer exists or role not authorized
           return res.status(401).json({ message: "Unauthorized" });
@@ -27,6 +44,7 @@ function authorize(roles = []) {
 
         // authentication and authorization successful
         req.user.role = account.role;
+        req.user.id = account.id;
         req.user.username = account.username;
         const refreshTokens = await account.getRefreshTokens();
         req.user.ownsToken = (token) =>

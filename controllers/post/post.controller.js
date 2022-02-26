@@ -55,7 +55,7 @@ async function create(req, res, next) {
   const id = parseUrlLink(req.body.url);
   if (id !== req.body.rawPostId) {
     return res
-      .status(401)
+      .status(403)
       .json({ message: "Bài reddit này không tồn tại, bạn tìm bài khác nhé" });
   } else {
     const isExist = await checkUrlExists(req.body.url + ".json");

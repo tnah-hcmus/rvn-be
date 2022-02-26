@@ -12,6 +12,7 @@ const errorHandler = require("middleware/error-handler");
 const getUserAgent = require("middleware/user-agent"); //raw agent
 const useragent = require("express-useragent");
 const config = require("config/auth.config");
+
 const app = express();
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -59,8 +60,8 @@ app.use((req, res, next) => {
 app.use(errorHandler);
 
 // set port, listen for requests
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}.`);
+// app.listen(process.env.HTTP_PORT, () => {
+//   console.log(`Server is running on port ${process.env.HTTP_PORT}.`);
 // });
 // let server = http
 //   .createServer(app)
@@ -68,7 +69,7 @@ app.use(errorHandler);
 //     console.log(`HTTP server is running on port ${process.env.HTTP_PORT}.`);
 //   });
 
-// start https server
+ // start https server
 let sslOptions = {
   key: fs.readFileSync(process.env.SSL_KEY),
   cert: fs.readFileSync(process.env.SSL_CERT),
