@@ -2,7 +2,11 @@ const config = require("config/auth.config");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const { promisify } = require("util");
+const fs = require("fs");
+const readFile = promisify(fs.readFile);
 const sendEmail = require("helper/send-email");
+const handlebars = require("handlebars");
 const { user: User, refreshToken: RefreshToken } = require("models/index");
 const Role = require("helper/role");
 const createUUID = require("helper/generate-uuid");
@@ -17,6 +21,7 @@ const {
   getFacebookUrl,
 } = require("helper/facebook-utils");
 const { Op } = require("sequelize");
+const path = require("path");
 module.exports = {
   authenticate,
   getThirdPartyUrlInfo,
@@ -332,20 +337,17 @@ function randomTokenString() {
 
 async function sendVerificationEmail(account) {
   try {
-    let message;
-    if (origin) {
-      const verifyUrl = `${origin}/auth/verify-email?token=${account.verificationToken}`;
-      message = `<p>Please click the below link to verify your email address:</p>
-                   <p><a href="${verifyUrl}">${verifyUrl}</a></p>`;
-    } else message = `<p>If you are developer. Please use the below token to verify your email address with the <code>/account/verify-email</code> api route:</p>
-                   <p><code>${account.verificationToken}</code></p>`;
-
+    const html = await readFile("template/verify.html", "utf8");
+    const template = handlebars.compile(html);
+    const url = `${origin}/auth/verify-email?token=${account.verificationToken}`;
+    const data = {
+      url,
+    };
+    const htmlToSend = template(data);
     await sendEmail({
       to: account.email,
-      subject: "Sign-up Verification API - Verify Email",
-      html: `<h4>Verify Email</h4>
-               <p>Thanks for registering!</p>
-               ${message}`,
+      subject: "Sign-up Verification RVN Editor - Verify Email",
+      html: htmlToSend,
     });
   } catch (err) {
     throw err;
@@ -353,24 +355,19 @@ async function sendVerificationEmail(account) {
 }
 
 async function sendAlreadyRegisteredEmail(account) {
-  const origin = "https://api.rvninc.net";
   try {
-    let message;
-    if (origin) {
-      message = `<p>If you don't know your password please visit the <a href="${origin}/api/auth/forgot-password">forgot password</a> page.</p>`;
-      if(account.isVerified) {
-        const verifyUrl = `${origin}/auth/verify-email?token=${account.verificationToken}`;
-        message += `<p>If you didn't receive verify email, please click the below link to verify your email address: <p><a href="${verifyUrl}">${verifyUrl}</a></p>`;
-      }
-    } else
-      message = `<p>If you are developer. If you don't know your password you can reset it via the <code>/api/auth/forgot-password</code> api route.</p>`;
+    const html = await readFile(!account.isVerified ? "template/already-not-verify.html" : "template/already-verify.html", "utf8");
+    const template = handlebars.compile(html);
+    const url = !account.isVerified ? `${origin}/auth/verify-email?token=${account.verificationToken}` : "https://rvninc.net";
+    const data = {
+      url,
+    };
+    const htmlToSend = template(data);
 
     await sendEmail({
       to: email,
       subject: "Sign-up Verification API - Email Already Registered",
-      html: `<h4>Email Already Registered</h4>
-               <p>Your email <strong>${account.email}</strong> is already registered.</p>
-               ${message}`,
+      html: htmlToSend,
     });
   } catch (err) {
     throw err;
@@ -379,19 +376,18 @@ async function sendAlreadyRegisteredEmail(account) {
 
 async function sendPasswordResetEmail(account) {
   try {
-    let message;
-    if (origin) {
-      const resetUrl = `${origin}/auth/reset-password?token=${account.resetToken}`;
-      message = `<p>Please click the below link to reset your password, the link will be valid for 1 day:</p>
-                   <p><a href="${resetUrl}">${resetUrl}</a></p>`;
-    } else message = `<p>If you are developer. Please use the below token to reset your password with the <code>/api/auth/reset-password</code> api route:</p>
-                   <p><code>${account.resetToken}</code></p>`;
+    const html = await readFile("template/forgot-password.html", "utf8");
+    const template = handlebars.compile(html);
+    const url = `${origin}/auth/reset-password?token=${account.resetToken}`;
+    const data = {
+      url,
+    };
+    const htmlToSend = template(data);
 
     await sendEmail({
       to: account.email,
       subject: "Sign-up Verification API - Reset Password",
-      html: `<h4>Reset Password Email</h4>
-               ${message}`,
+      html: htmlToSend,
     });
   } catch (err) {
     throw err;
