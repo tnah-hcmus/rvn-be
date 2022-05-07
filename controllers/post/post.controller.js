@@ -58,23 +58,22 @@ async function create(req, res, next) {
       .status(403)
       .json({ message: "Bài reddit này không tồn tại, bạn tìm bài khác nhé" });
   } else {
-    const isExist = await checkUrlExists(req.body.url + ".json");
-    if (!isExist)
-      return res.status(403).json({
-        message: "Bài reddit này không tồn tại, bạn tìm bài khác nhé",
-      });
-    else {
-      req.body.ownerId = req.user.id;
-      req.body.id = createUUID();
-      postHelper
-        .create(req.body)
-        .then((post) => {
-          delete post.id;
-          delete post.ownerId;
-          res.json(post);
-        })
-        .catch(next);
-    }
+    // const isExist = await checkUrlExists(req.body.url + ".json");
+    // if (!isExist)
+    //   return res.status(403).json({
+    //     message: "Bài reddit này không tồn tại, bạn tìm bài khác nhé",
+    //   });
+    // else {
+    req.body.ownerId = req.user.id;
+    req.body.id = createUUID();
+    postHelper
+      .create(req.body)
+      .then((post) => {
+        delete post.id;
+        delete post.ownerId;
+        res.json(post);
+      })
+      .catch(next);
   }
 }
 
