@@ -60,23 +60,24 @@ app.use((req, res, next) => {
 app.use(errorHandler);
 
 // set port, listen for requests
-// app.listen(process.env.HTTP_PORT, () => {
-//   console.log(`Server is running on port ${process.env.HTTP_PORT}.`);
-// });
-// let server = http
-//   .createServer(app)
-//   .listen(process.env.HTTP_PORT, undefined, () => {
-//     console.log(`HTTP server is running on port ${process.env.HTTP_PORT}.`);
-//   });
-
- // start https server
-let sslOptions = {
-  key: fs.readFileSync(process.env.SSL_KEY),
-  cert: fs.readFileSync(process.env.SSL_CERT),
-};
-
-let serverHttps = https
-  .createServer(sslOptions, app)
-  .listen(process.env.HTTPS_PORT, undefined, () => {
-    console.log(`HTTPS server is running on port ${process.env.HTTPS_PORT}.`);
+if(process.env.DEV) {
+  app.listen(process.env.HTTP_PORT, () => {
+    console.log(`Server is running on port ${process.env.HTTP_PORT}.`);
   });
+} else {
+  // let server = http
+  //   .createServer(app)
+  //   .listen(process.env.HTTP_PORT, undefined, () => {
+  //     console.log(`HTTP server is running on port ${process.env.HTTP_PORT}.`);
+  //   });
+  // start https server
+  let sslOptions = {
+    key: fs.readFileSync(process.env.SSL_KEY),
+    cert: fs.readFileSync(process.env.SSL_CERT),
+  };
+  https
+    .createServer(sslOptions, app)
+    .listen(process.env.HTTPS_PORT, undefined, () => {
+      console.log(`HTTPS server is running on port ${process.env.HTTPS_PORT}.`);
+    });
+}
