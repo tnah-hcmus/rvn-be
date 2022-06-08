@@ -1,6 +1,6 @@
 const xoauth2 = require("xoauth2");
 module.exports = {
-  emailFrom: "tnah@rvn.com",
+  emailFrom: process.env.CLIENT_SECRET,
   smtpOptions: {
     service: "gmail",
     auth: {
@@ -15,6 +15,15 @@ module.exports = {
   },
   smtpOptions2: {
     service: process.env.CLIENT_SERVICE,
+    auth: {
+      user: process.env.CLIENT_SECRET,
+      pass: process.env.CLIENT_PASS,
+    },
+  },
+  smtpOptions3: {
+    host: process.env.CLIENT_SERVICE,
+    secure: true,
+    port: 465,
     auth: {
       user: process.env.CLIENT_SECRET,
       pass: process.env.CLIENT_PASS,

@@ -365,7 +365,7 @@ async function sendAlreadyRegisteredEmail(account) {
     const htmlToSend = template(data);
 
     await sendEmail({
-      to: email,
+      to: account.email,
       subject: "Sign-up Verification API - Email Already Registered",
       html: htmlToSend,
     });
