@@ -196,7 +196,7 @@ async function revokeToken({ token, ipAddress }) {
 async function register(params) {
   try {
     // validate
-    const preAccount = await User.findOne({ where: { email: params.email } }) || await User.findOne({ where: { username: params.username } });
+    const preAccount = await User.scope("withHash").findOne({ where: { email: params.email } }) || await User.scope("withHash").findOne({ where: { username: params.username } });
     if (preAccount) {
       // send already registered error in email to prevent account enumeration
       sendAlreadyRegisteredEmail(preAccount);
@@ -231,7 +231,7 @@ async function register(params) {
 
 async function verifyEmail({ token }) {
   try {
-    const account = await User.findOne({ where: { verificationToken: token } });
+    const account = await User.scope("withHash").findOne({ where: { verificationToken: token } });
 
     if (!account) throw "Verification failed";
 
@@ -245,7 +245,7 @@ async function verifyEmail({ token }) {
 
 async function forgotPassword({ credentital }) {
   try {
-    const account = await User.findOne({ where: { email: credentital } }) || await User.findOne({ where: { username: credentital } });
+    const account = await User.scope("withHash").findOne({ where: { email: credentital } }) || await User.scope("withHash").findOne({ where: { username: credentital } });
 
     // always return ok response to prevent email enumeration
     if (!account) return;
@@ -264,7 +264,7 @@ async function forgotPassword({ credentital }) {
 
 async function validateResetToken({ token }) {
   try {
-    const account = await User.findOne({
+    const account = await User.scope("withHash").findOne({
       where: {
         resetToken: token,
         resetTokenExpires: { [Op.gt]: Date.now() },
